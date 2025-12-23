@@ -1,0 +1,31 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false, // Windows Authentication is disabled.
+    "anonymousAuthentication": true, // Anonymous Authentication is enabled.
+    "iisExpress": {
+      "applicationUrl": "http://localhost:46465", // The default HTTP URL for IIS Express.
+      "sslPort": 44343 // The SSL port used by IIS Express.
+    }
+  },
+  "profiles": {
+    "IIS Express": {
+      "commandName": "IISExpress", // Uses IIS Express for hosting.
+      "launchBrowser": true, // Automatically opens the browser upon running the app.
+      "launchUrl": "api/status/check", // The specific route it will try to open after launch.
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development" // The environment set to Development.
+      }
+    },
+    "WebServer": {
+      "commandName": "Project", // Runs the project directly (can be used for running without IIS Express).
+      "dotnetRunMessages": true, // Displays .NET run messages in the console.
+      "launchBrowser": true, // Automatically opens the browser upon running the app.
+      "launchUrl": "api/status/check", // The specific route it will try to open after launch.
+      "applicationUrl": "https://localhost:44343;http://localhost:46465", // The URLs for both HTTPS and HTTP.
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development" // The environment set to Development.
+      }
+    }
+  }
+}

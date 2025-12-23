@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "Demolition Synergy Server",
+    "Description": "A game server for Demolition Synergy",
+    "AppIcon": "dsynergy-server.png",
+    "ProcessNames": [ "java", "javaw" ],
+    "ProcessId": null
+  },
+  {
+    "Name": "Teamspeak 3 Server",
+    "Description": "Gaming VOIP Server",
+    "AppIcon": "teamspeak3-server.png",
+    "ProcessNames": [ "ts3server" ],
+    "ProcessId": null
+  }
+]

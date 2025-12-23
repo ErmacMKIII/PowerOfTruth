@@ -1,0 +1,83 @@
+﻿caption {
+    padding: 10px;
+    font-size: large;
+    caption-side: top;
+}
+
+.banner {
+    display: block; /* Ensures the image takes up its own line */
+    margin: 0 auto; /* Centers the image horizontally */
+    margin-bottom: 5px; /* Optional: adds some space between the image and the text */
+}
+
+.service-nameicon {
+    text-align: center; /* Centers the text and image together */
+    display: inline-block; /* Keeps the span block-like but allows for centering */
+    width: 100%; /* Ensures the span takes the full width of the table cell */
+}
+
+#ServiceStatus {
+    background-color: #ffc000;
+    background-image: linear-gradient(to bottom, #ffc000, #1e1e1e);
+}
+
+.table-container {
+    max-width: 100%; /* Restricts table from overflowing horizontally */
+    max-height: 800px; /* Adjust this value as needed */
+    overflow: auto; /* Enables scrolling if table is too large */
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    height: auto;
+    max-width: 100%; /* Restricts table from overflowing horizontally */
+    border-collapse: collapse;
+    background-color: #1e1e1e1e;
+    border-radius: 8px;
+    overflow-y: scroll;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+th, td {
+    box-shadow: #2a2a2a99 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.8) 0px 18px 36px -18px inset;
+    padding: 15px 12px;
+}
+
+th {
+    background-color: #333;
+    color: #ffffff;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background-color: #2a2a2a;
+}
+
+tr:nth-child(odd) {
+    background-color: #1f1f1f;
+}
+
+tr:hover {
+    background-color: #1f212a;
+}
+
+td {
+    max-width: 320px;
+    max-height: 240px;
+    text-align: center;
+    border-bottom: 1px solid #444;
+}
+
+th, td {
+    transition: background-color 0.3s ease;
+}
+
+.chart {
+    width: 320px;
+    height: 240px;
+}

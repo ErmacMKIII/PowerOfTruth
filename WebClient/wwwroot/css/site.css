@@ -1,0 +1,93 @@
+/* Global Dark Theme Styles */
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html {
+    margin: auto;
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin: auto;
+    color: #e0e0e0;
+    background-color: #1a1a1a;
+    margin-bottom: 60px;
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.8) 0px 18px 36px -18px inset;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #333;
+    border-bottom: 1px solid #444;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px -50px 36px -28px inset;
+}
+
+.navbar-brand {
+    color: #ffffff !important;
+}
+
+.nav-link {
+    color: #cfcfcf !important;
+}
+
+.nav-link:hover {
+    color: #ffffff !important;
+}
+
+.navbar-toggler {
+    border: 1px solid #666;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%2888, 88, 88, 0.7%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Main Content Styles */
+main {
+    margin: auto;
+    padding: 5px 5px;
+    background-color: #2b2b2b;
+    box-shadow: rgba(0, 0, 0, 0.6) 0px 5px 15px;
+    border-radius: 8px;
+}
+
+/* Footer Styles */
+footer {
+    margin:auto;
+    background-color: #333;
+    color: #c0c0c0;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
+}
+
+footer a {
+    color: #ffffff;
+}
+
+footer a:hover {
+    color: #ff9800;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-collapse {
+    flex-grow: 0;
+}
+
+.pb-3 {
+    width: 100%;
+    background-color: #088a82a9;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.5) 0px 18px 36px -18px inset;
+}

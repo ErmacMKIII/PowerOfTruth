@@ -1,0 +1,113 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/css/main.css" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1" type="text/javascript"></script>
+    <script src="~/js/main.js" type="text/javascript"></script>
+    
+</head>
+<body>
+    <div class="container-fluid table-container">
+        @if (Model.IsError)
+        {
+            <span class="text-danger">@Model.ErrorMessage</span>
+        }
+        <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Window Title</th>
+                <th>Status</th>
+                <th>Up Time / Down Time</th>
+                <th>General Availability</th>
+                <th>Past 7 Days</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* Display all service(s) in a table *@
+            @if (Model.Services is not null)
+            {
+                @foreach (var item in Model.Services)
+                {
+                    <tr>
+                        <td>
+                            @*If app icon is non-null-empty and exits in assets directory then use it*@
+                            @if (!string.IsNullOrEmpty(item.AppIcon) && Directory.GetFiles($"./wwwroot/assets").Contains($"./wwwroot/assets{System.IO.Path.DirectorySeparatorChar}{item.AppIcon}"))
+                            {
+                                <span class="service-nameicon"><img src="~/assets/@item.AppIcon" alt="Banner" class="banner"/>@item.ServiceName</span>
+                            }
+                            @*Else fallback to default one*@
+                            else
+                            {
+                               <span class="service-nameicon"><img src="~/assets/default.png" alt="Banner" class="banner" />@item.ServiceName</span>
+                            }
+                        </td>
+                        <td><span>@item.ServiceDescription</span></td>
+                        <td><span>@item.WindowTitle</span></td>
+                        <td>
+                            @*'White/Green/Red' Dot*@
+                            @{
+                                string statusDot;
+                                switch (item.Status)
+                                {
+                                    case Service.OpStatus.STARTED:
+                                        statusDot = "⚪"; // White dot for started
+                                        break;
+                                    case Service.OpStatus.ONLINE:
+                                        statusDot = "🟢"; // Green dot for online
+                                        break;
+                                    case Service.OpStatus.OFFLINE:
+                                        statusDot = "🔴"; // Red dot for offline
+                                        break;
+                                    default:
+                                        statusDot = "⚪"; // Default to white dot
+                                        break;
+                                }
+                            }
+                            <span>@item.Status.ToString() @statusDot</span>
+                        </td>
+                        <td>
+                            @* Relative Op Time (UpTime/DownTime) *@
+                            @{
+                                TimeSpan relativeOpTime = item.GetRelativeOperationalTime();
+                                string relativeOpTimeString = $"{(int)relativeOpTime.TotalDays} days, {relativeOpTime.Hours} hours, {relativeOpTime.Minutes} minutes, {relativeOpTime.Seconds} seconds";
+                            }
+                            <span>@relativeOpTimeString</span>
+                        </td>
+                        <td>
+                            @* Calculate General Availability *@
+                            <span>@item.CalculateAvailability().ToString("F2")%</span>
+                        </td>
+                        <td>
+                            @* Plot Monthly Availability *@
+                            <canvas class = "chart" id="chart-@item.ServiceName" width="320" height="240"></canvas>
+                            <script type="module">
+                                import { plotPast7DaysAvailability } from './js/main.js';
+                                document.addEventListener("DOMContentLoaded", () => {
+                                    const upTimeData = @Html.Raw(Json.Serialize(item.UpTime));
+                                    const downTimeData = @Html.Raw(Json.Serialize(item.DownTime));
+
+                                    const upTime = upTimeData.map(dateStr => new Date(dateStr));
+                                    const downTime = downTimeData.map(dateStr => new Date(dateStr));
+
+                                    plotPast7DaysAvailability(upTime, downTime, 'chart-@item.ServiceName');
+                                });
+                            </script>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+        <caption class="text-light bg-secondary bg-opacity-75" id="ServiceStatus">Service Status</caption>
+    </table>
+    </div>
+</body>
+</html>
