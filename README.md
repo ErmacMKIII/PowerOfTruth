@@ -83,7 +83,7 @@ This rule keeps good practice.
 
 Visual Studio 2022 is needed.
 
-**Project is free for public use and can be freely used, modified or distributed**
+**Project is free for public use and can be freely used, modified or distributed.**
 
 Clone the project via Visual Studio 2022.
 
@@ -168,12 +168,15 @@ Done.
 Make sure that TCP following ports below are allowed by Windows Firewall.
 And Port forwarded is being configured on router for TCP protocol.
 
-WebServer:
+In router configuration add local IP (not public IP) of your PC where app is hosted.
+Then for the ports:
+
+- WebServer:
 
 Internal Port: 44343 (HTTPS) or 5000 (HTTP)
 External Port: You can keep it the same as the internal port or choose a different one (e.g., 44343).
 
-WebClient:
+- WebClient
 
 Internal Port: 44300 (HTTPS) or 5001 (HTTP)
 External Port: You can keep it the same as the internal port or choose a different one (e.g., 44300).
