@@ -171,7 +171,7 @@ And Port forwarded is being configured on router for TCP protocol.
 In router configuration add local IP (not public IP) of your PC where app is hosted.
 Then for the ports:
 
-- WebServer:
+- WebServer
 
 Internal Port: 44343 (HTTPS) or 5000 (HTTP)
 External Port: You can keep it the same as the internal port or choose a different one (e.g., 44343).
