@@ -53,7 +53,7 @@ Hidden WebAPI (requires credentials to be used) is called.
 ![Alt text](./Misc/WebServer.png?raw=true "WebServer")
 
 Go and launch 
-Power of Truth Dashboard Machine IP in the browser.
+Power of Truth Dashboard Machine Hostname/IP in the browser.
 Table with actual services will be returned.
 
 ![Alt text](./Misc/WebClient.png?raw=true "WebClient")
@@ -83,8 +83,7 @@ This rule keeps good practice.
 
 Visual Studio 2022 is needed.
 
-**Project is property of 
-Power of Truth Dashboard. Need explicit permission to view or work on it.**
+**Project is free for public use and can be freely used, modified or distributed**
 
 Clone the project via Visual Studio 2022.
 
@@ -102,8 +101,7 @@ Please use Developer Shell of Visual Studio 2022.
 
 To publish WebServer please use following commands:
 ```
-cd C:\Users\coas9\source\repos\
-PowerOfTruthApp\WebServer
+cd C:\Users\coas9\GitHub\PowerOfTruth\WebServer
 ```
 ```
 dotnet publish -c Release -o ../publish/WebServer
@@ -111,8 +109,7 @@ dotnet publish -c Release -o ../publish/WebServer
 
 Similarly, to publish WebClient please use following commands:
 ```
-cd C:\Users\coas9\source\repos\
-PowerOfTruthApp\WebClient
+cd C:\Users\coas9\GitHub\PowerOfTruth\WebClient
 ```
 ```
 dotnet publish -c Release -o ../publish/WebClient
