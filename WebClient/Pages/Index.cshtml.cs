@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.NetworkInformation;
 using Newtonsoft.Json;
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace WebClient.Pages
 {
@@ -55,7 +57,7 @@ namespace WebClient.Pages
                 TimeSpan relative = DateTime.Now - this.UpTime.LastOrDefault();
 
                 return relative;
-            } 
+            }
             else if (this.DownTime is not null && this.Status == OpStatus.OFFLINE)
             {
                 TimeSpan relative = DateTime.Now - this.DownTime.LastOrDefault();
@@ -84,7 +86,7 @@ namespace WebClient.Pages
                 DownTime.Add(DateTime.Now);
             }
 
-            double totalUptime = 0;
+            double totalUptime = 0.0;
             DateTime? lastDownTime = null;
 
             for (int i = 0; i < UpTime.Count; i++)
@@ -116,13 +118,13 @@ namespace WebClient.Pages
             DateTime endTime = lastDownTime.HasValue ? lastDownTime.Value : DateTime.Now;
             double totalTime = (endTime - UpTime.First()).TotalSeconds;
 
-            if (totalTime <= 0)
+            if (totalTime <= 0.0)
             {
                 return 0.0; // Avoid division by zero or negative time
             }
 
             // Calculate availability as a percentage
-            double availability = (totalUptime / totalTime) * 100;
+            double availability = (totalUptime / totalTime) * 100.0;
 
             // Constrain the availability between 0 and 100
             availability = Math.Max(0.0, Math.Min(100.0, availability));
@@ -131,23 +133,28 @@ namespace WebClient.Pages
         }
 
     }
+
     public class IndexModel : PageModel
     {
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IConfiguration _configuration;
         protected List<Service>? _services = null;
         private readonly ILogger<IndexModel> _logger;
+
         // Handling error situations
         protected bool _isError = false;
         protected string? _errorMessage;
+        protected string? _errorDetails;
 
         public List<Service>? Services { get => _services; }
-
         public bool IsError { get => _isError; }
         public string? ErrorMessage { get => _errorMessage; }
+        public string? ErrorDetails { get => _errorDetails; }
 
-        public IndexModel(IHttpClientFactory clientFactory, ILogger<IndexModel> logger)
+        public IndexModel(IHttpClientFactory clientFactory, IConfiguration configuration, ILogger<IndexModel> logger)
         {
             _clientFactory = clientFactory;
+            _configuration = configuration;
             _logger = logger;
         }
 
@@ -159,15 +166,16 @@ namespace WebClient.Pages
         {
             _isError = false;
             _errorMessage = null;
+            _errorDetails = null;
 
             // Initialize _services to avoid null checks later
             _services = new List<Service>();
 
+            // Get the HttpClient instance from the factory
+            var client = _clientFactory.CreateClient("WebAPI");
+
             try
             {
-                // Get the HttpClient instance from the factory
-                var client = _clientFactory.CreateClient("WebAPI");
-
                 // API request
                 Uri uri = new Uri("/api/status/check/services", UriKind.Relative);
                 var response = await client.GetAsync(uri).ConfigureAwait(false);
@@ -175,8 +183,11 @@ namespace WebClient.Pages
                 // Check if the API call succeeded
                 if (!response.IsSuccessStatusCode)
                 {
+                    _isError = true;
+                    _errorMessage = $"API Error: {response.StatusCode}";
+                    _errorDetails = $"The server returned status code {(int)response.StatusCode} ({response.ReasonPhrase}). Please check if the WebServer is running and accessible.";
                     _logger.LogWarning($"API call failed: {response.StatusCode} - {response.ReasonPhrase}");
-                    return;  // Exit early, no further processing required
+                    return;
                 }
 
                 // Read and process the response
@@ -188,24 +199,117 @@ namespace WebClient.Pages
                     _services = JsonConvert.DeserializeObject<List<Service>>(
                         responseData,
                         new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto }
-                    ) ?? new List<Service>();  // Ensure _services is always a valid list
+                    ) ?? new List<Service>();
                 }
+            }
+            catch (TaskCanceledException tcEx) when (tcEx.InnerException is TimeoutException)
+            {
+                // Handle timeout errors specifically
+                _isError = true;
+                _errorMessage = "Request Timeout";
+                _errorDetails = "The request to the WebServer timed out. The server may be slow to respond or unreachable. Please check your network connection and server status.";
+                _logger.LogError(tcEx, "Request timed out while connecting to WebServer.");
+            }
+            catch (TaskCanceledException tcEx)
+            {
+                // Handle general task cancellation (usually timeout)
+                _isError = true;
+                _errorMessage = "Request Timeout";
+
+                var apiConfig = _configuration.GetSection("ApiSettings");
+                var baseUrl = apiConfig.GetValue<string>("BaseUrl");
+                var timeout = client?.Timeout.TotalSeconds ?? 120;
+
+                _errorDetails = $"The request to {baseUrl} exceeded the timeout limit ({timeout} seconds). The server may be overloaded or not responding.";
+                _logger.LogError(tcEx, "Request was cancelled (likely due to timeout).");
+            }
+            catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Security.Authentication.AuthenticationException authEx)
+            {
+                // Handle SSL/TLS certificate validation errors
+                _isError = true;
+                _errorMessage = "Certificate Validation Failed";
+
+                var apiConfig = _configuration.GetSection("ApiSettings");
+                var baseUrl = apiConfig.GetValue<string>("BaseUrl");
+                var certPath = apiConfig.GetValue<string>("CertificatePath");
+                var bypassValidation = apiConfig.GetValue<bool>("BypassCertificateValidation");
+
+                _errorDetails = $"Failed to establish a secure connection to {baseUrl}. ";
+
+                if (bypassValidation)
+                {
+                    _errorDetails += "Certificate validation is bypassed but authentication still failed. ";
+                }
+                else if (!string.IsNullOrEmpty(certPath))
+                {
+                    _errorDetails += $"The server's certificate does not match the expected certificate at '{certPath}'. ";
+                }
+                else
+                {
+                    _errorDetails += "The server's certificate could not be validated. ";
+                }
+
+                _errorDetails += "Please verify the certificate configuration or enable 'BypassCertificateValidation' in development.";
+
+                _logger.LogError(authEx, "Certificate validation failed: {Message}", authEx.Message);
+            }
+            catch (HttpRequestException httpEx) when (httpEx.Message.Contains("certificate") || httpEx.Message.Contains("SSL"))
+            {
+                // Handle other SSL/certificate-related errors
+                _isError = true;
+                _errorMessage = "SSL/Certificate Error";
+
+                var apiConfig = _configuration.GetSection("ApiSettings");
+                var baseUrl = apiConfig.GetValue<string>("BaseUrl");
+
+                _errorDetails = $"An SSL/Certificate error occurred while connecting to {baseUrl}. ";
+                _errorDetails += $"Error: {httpEx.Message}. ";
+                _errorDetails += "Please check the certificate configuration in appsettings.json.";
+
+                _logger.LogError(httpEx, "SSL/Certificate error occurred.");
             }
             catch (HttpRequestException httpEx)
             {
-                // Handle specific HTTP request errors (network failures, etc.)
+                // Handle other HTTP request errors (network failures, connection refused, etc.)
                 _isError = true;
-                _errorMessage = "A network error occurred while fetching data.";
-                _logger.LogError(httpEx, "HttpRequestException occurred.");
+                _errorMessage = "Connection Error";
+
+                var apiConfig = _configuration.GetSection("ApiSettings");
+                var baseUrl = apiConfig.GetValue<string>("BaseUrl");
+
+                _errorDetails = $"Failed to connect to the WebServer at {baseUrl}. ";
+
+                if (httpEx.Message.Contains("Connection refused") || httpEx.Message.Contains("No connection could be made"))
+                {
+                    _errorDetails += "The server is not accepting connections. Please ensure the WebServer is running.";
+                }
+                else if (httpEx.Message.Contains("nodename nor servname provided"))
+                {
+                    _errorDetails += "The server address could not be resolved. Please check the BaseUrl in appsettings.json.";
+                }
+                else
+                {
+                    _errorDetails += $"Error: {httpEx.Message}";
+                }
+
+                _logger.LogError(httpEx, "HttpRequestException occurred while connecting to WebServer.");
+            }
+            catch (JsonException jsonEx)
+            {
+                // Handle JSON deserialization errors
+                _isError = true;
+                _errorMessage = "Data Format Error";
+                _errorDetails = $"The server returned invalid data that could not be processed. Error: {jsonEx.Message}";
+                _logger.LogError(jsonEx, "Failed to deserialize JSON response.");
             }
             catch (Exception ex)
             {
-                // Handle other generic errors
+                // Handle other unexpected errors
                 _isError = true;
-                _errorMessage = $"An unexpected error occurred: {ex.Message}";
-                _logger.LogError(ex, "An error occurred while fetching data.");
+                _errorMessage = "Unexpected Error";
+                _errorDetails = $"An unexpected error occurred: {ex.Message}. Please check the logs for more details.";
+                _logger.LogError(ex, "An unexpected error occurred while fetching data.");
             }
         }
-
     }
 }

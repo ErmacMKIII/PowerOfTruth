@@ -81,3 +81,65 @@ th, td {
     width: 320px;
     height: 240px;
 }
+
+.error-container {
+    margin: 20px auto;
+    max-width: 900px;
+    padding: 20px;
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-title {
+    color: #721c24;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.error-icon {
+    font-size: 2rem;
+    margin-right: 10px;
+}
+
+.error-message {
+    color: #721c24;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.error-details {
+    background-color: #fff;
+    padding: 15px;
+    border-left: 4px solid #dc3545;
+    border-radius: 4px;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-top: 10px;
+}
+
+.error-details strong {
+    color: #721c24;
+}
+
+.reload-button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.reload-button:hover {
+    background-color: #c82333;
+}
