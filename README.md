@@ -187,6 +187,7 @@ External Port: You can keep it the same as the internal port or choose a differe
 Now the endpoints can be accessed publicly from the Internet.
 
 # Certificate Setup (Development)
+```
 ┌─────────────────────────────────────────────────────────────┐
 │                      Certificate Setup                      │
 ├─────────────────────────────────────────────────────────────┤
@@ -202,7 +203,7 @@ Now the endpoints can be accessed publicly from the Internet.
 │                                                             │
 │  Both must have the SAME thumbprint                         │
 └─────────────────────────────────────────────────────────────┘
-
+```
 # Export Certificate (Development)
 
 To export certificate from one machine use Windows PowerShell commands, below.

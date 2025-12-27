@@ -68,98 +68,83 @@ builder.Services.AddHttpClient("WebAPI", client =>
     }
     else
     {
-        // Load and validate with specific certificate
-        var certPath = apiConfig["CertificatePath"];
+        // Set up custom certificate validation
+        logger.LogInformation("Configuring custom certificate validation");
 
-        if (!string.IsNullOrEmpty(certPath))
+        // Simple validation: accept certificates with acceptable SSL policy errors
+        handler.ServerCertificateCustomValidationCallback = (request, certificate, chain, errors) =>
         {
-            // Handle relative paths
-            if (!Path.IsPathRooted(certPath))
+            // If no certificate provided by server, reject
+            if (certificate == null)
             {
-                certPath = Path.Combine(Directory.GetCurrentDirectory(), certPath);
+                logger.LogError("Server did not provide a certificate");
+                return false;
             }
 
-            if (File.Exists(certPath))
+            // Convert to X509Certificate2 for logging
+            var serverCert = new X509Certificate2(certificate);
+
+            logger.LogInformation("═══════════════════════════════════════════════════════════");
+            logger.LogInformation("   Certificate Validation:");
+            logger.LogInformation($"  Server Subject:    {serverCert.Subject}");
+            logger.LogInformation($"  Server Issuer:     {serverCert.Issuer}");
+            logger.LogInformation($"  Server Thumbprint: {serverCert.Thumbprint}");
+            logger.LogInformation($"  Valid From:        {serverCert.NotBefore:yyyy-MM-dd HH:mm:ss}");
+            logger.LogInformation($"  Valid To:          {serverCert.NotAfter:yyyy-MM-dd HH:mm:ss}");
+            logger.LogInformation($"  SSL Policy Errors: {errors}");
+
+            // Check if certificate is within valid date range
+            var now = DateTime.Now;
+            if (now < serverCert.NotBefore || now > serverCert.NotAfter)
             {
-                logger.LogInformation($"Loading certificate from: {certPath}");
-
-                try
-                {
-                    // Load the expected certificate for validation
-                    var expectedCert = new X509Certificate2(certPath);
-                    logger.LogInformation($"Expected certificate loaded - Subject: {expectedCert.Subject}, Thumbprint: {expectedCert.Thumbprint}");
-
-                    // Set up custom certificate validation
-                    handler.ServerCertificateCustomValidationCallback = (request, certificate, chain, errors) =>
-                    {
-                        // If no certificate provided by server, reject
-                        if (certificate == null)
-                        {
-                            logger.LogError("Server did not provide a certificate");
-                            return false;
-                        }
-
-                        // Convert to X509Certificate2 for better comparison
-                        var serverCert = new X509Certificate2(certificate);
-
-                        logger.LogInformation($"Server certificate - Subject: {serverCert.Subject}, Issuer: {serverCert.Issuer}");
-                        logger.LogInformation($"Server certificate Thumbprint: {serverCert.Thumbprint}");
-                        logger.LogInformation($"SSL Policy Errors: {errors}");
-
-                        // Compare certificates by thumbprint (most reliable method)
-                        bool thumbprintMatch = serverCert.Thumbprint.Equals(expectedCert.Thumbprint, StringComparison.OrdinalIgnoreCase);
-
-                        if (!thumbprintMatch)
-                        {
-                            logger.LogError($"Certificate thumbprint mismatch. Expected: {expectedCert.Thumbprint}, Got: {serverCert.Thumbprint}");
-                            return false;
-                        }
-
-                        // Check for SSL policy errors
-                        if (errors != System.Net.Security.SslPolicyErrors.None)
-                        {
-                            logger.LogWarning($"SSL Policy Errors detected: {errors}");
-
-                            // Allow RemoteCertificateNameMismatch and RemoteCertificateChainErrors for self-signed certificates
-                            // but only if the thumbprint matches
-                            if (thumbprintMatch)
-                            {
-                                // Accept self-signed certificates with name mismatches if thumbprint is correct
-                                if (errors.HasFlag(System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors))
-                                {
-                                    logger.LogInformation("Accepting certificate with chain errors due to thumbprint match (likely self-signed)");
-                                }
-                                if (errors.HasFlag(System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch))
-                                {
-                                    logger.LogInformation("Accepting certificate with name mismatch due to thumbprint match");
-                                }
-                                return true;
-                            }
-
-                            logger.LogError("SSL Policy Errors present and thumbprint does not match");
-                            return false;
-                        }
-
-                        logger.LogInformation("Certificate validation successful");
-                        return true;
-                    };
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, $"Failed to load certificate from path: {certPath}");
-                    throw;
-                }
+                logger.LogError($"   Certificate is not within valid date range");
+                logger.LogError($"   Valid From: {serverCert.NotBefore}");
+                logger.LogError($"   Valid To:   {serverCert.NotAfter}");
+                logger.LogError($"   Current:    {now}");
+                return false;
             }
-            else
+
+            // Accept if no SSL policy errors
+            if (errors == System.Net.Security.SslPolicyErrors.None)
             {
-                logger.LogError($"Certificate file not found at: {certPath}");
-                throw new FileNotFoundException($"Certificate file not found at: {certPath}");
+                logger.LogInformation("Certificate validation PASSED (no SSL errors)");
+                logger.LogInformation("═══════════════════════════════════════════════════════════");
+                return true;
             }
-        }
-        else
-        {
-            logger.LogWarning("No certificate path configured. Using default certificate validation.");
-        }
+
+            // Accept RemoteCertificateNameMismatch (common when accessing by IP instead of hostname)
+            if (errors == System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch)
+            {
+                logger.LogInformation("Certificate validation PASSED (name mismatch accepted for IP-based access)");
+                logger.LogInformation("═══════════════════════════════════════════════════════════");
+                return true;
+            }
+
+            // Accept RemoteCertificateChainErrors (common for self-signed certificates)
+            if (errors == System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors)
+            {
+                logger.LogInformation("Certificate validation PASSED (chain errors accepted for self-signed certificates)");
+                logger.LogInformation("═══════════════════════════════════════════════════════════");
+                return true;
+            }
+
+            // Accept combination of NameMismatch and ChainErrors (self-signed cert accessed by IP)
+            if (errors == (System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch |
+                          System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors))
+            {
+                logger.LogInformation("Certificate validation PASSED (name mismatch + chain errors accepted)");
+                logger.LogInformation("═══════════════════════════════════════════════════════════");
+                return true;
+            }
+
+            // Reject other SSL policy errors
+            logger.LogError($"Certificate validation FAILED: {errors}");
+            logger.LogInformation("═══════════════════════════════════════════════════════════");
+            return false;
+        };
+
+        logger.LogInformation("Custom certificate validation configured");
+        logger.LogInformation("  Accepts: No errors, Name mismatch, Chain errors (self-signed)");
     }
 
     return handler;
