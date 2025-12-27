@@ -18,17 +18,17 @@ App consists of lookup Json Input File which looks like this:
 ```
 [
   {
-    "Name": "Demolition Synergy",
-    "Description": "A game server process for Demolition Synergy",
+    "Name": "Demolition Synergy Server",
+    "Description": "A game server for Demolition Synergy",
     "AppIcon": "dsynergy-server.png",
-    "ProcessName": "java",
+    "ProcessNames": [ "java", "javaw" ],
     "ProcessId": null
   },
   {
     "Name": "Teamspeak 3 Server",
     "Description": "Gaming VOIP Server",
     "AppIcon": "teamspeak3-server.png",
-    "ProcessName": "ts3server",
+    "ProcessNames": [ "ts3server" ],
     "ProcessId": null
   }
 ]
