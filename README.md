@@ -3,6 +3,8 @@
 Power of Truth Service Dashboard.
 Displays information about services - running processes or services on some PC.
 
+![Alt text](./Misc/Example.png?raw=true "Running services on PC")
+
 # How to Use
 
 Use appsettings.json to setup local IP and Http/Https ports for both WebServer and WebClient.
@@ -56,6 +58,7 @@ Go and launch
 Power of Truth Dashboard Machine Hostname/IP in the browser.
 Table with actual services will be returned.
 
+If no services found on machine it would display as is, below.
 ![Alt text](./Misc/WebClient.png?raw=true "WebClient")
 
 # Solution
@@ -182,3 +185,40 @@ Internal Port: 44300 (HTTPS) or 5001 (HTTP)
 External Port: You can keep it the same as the internal port or choose a different one (e.g., 44300).
 
 Now the endpoints can be accessed publicly from the Internet.
+
+# Certificate Setup (Development)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Certificate Setup                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PowerOfTruth.pfx (Private Key)                             │
+│  └─► Used by WebServer to serve HTTPS                       │
+│      Location: WebServer\PowerOfTruth.pfx                   │
+│                                                             │
+│  PowerOfTruth.cer (Public Key Only)                         │
+│  └─► Exported from PFX                                      │
+│  └─► Used by WebClient to validate server certificate       │
+│      Location: WebClient\PowerOfTruth.cer                   │
+│                                                             │
+│  Both must have the SAME thumbprint                         │
+└─────────────────────────────────────────────────────────────┘
+```
+# Export Certificate (Development)
+
+To export certificate from one machine use Windows PowerShell commands, below.
+
+```
+# List certificates in store
+Get-ChildItem -Path Cert:\LocalMachine\My
+
+# Export certificate without private key (public only)
+$cert = Get-ChildItem -Path Cert:\LocalMachine\My | Where-Object {$_.Subject -like "*localhost*"}
+Export-Certificate -Cert $cert -FilePath "C:\certificates\PowerOfTruth.cer" -Type CERT
+
+# Export certificate with private key (PFX format)
+$cert | Export-PfxCertificate -FilePath "C:\certificates\PowerOfTruth.pfx" -Password (ConvertTo-SecureString -String "PowerOfTruth13667" -Force -AsPlainText)
+
+# Export to Base64 string
+[System.Convert]::ToBase64String($cert.RawData) | Out-File "C:\certificates\certificate-base64.txt"
+```
