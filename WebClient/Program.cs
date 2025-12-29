@@ -19,9 +19,9 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnCh
 // ============================================================================
 
 // Load settings from appsettings.json, LocalIPAddress, HttpPort, and HttpsPort
-string localIP = builder.Configuration.GetValue<string>("LocalIPAddress") ?? "0.0.0.0";
-string httpPort = builder.Configuration.GetValue<string>("HttpPort") ?? "5001";
-string httpsPort = builder.Configuration.GetValue<string>("HttpsPort") ?? "44300";
+string localIP = builder.Configuration.GetValue<string>("LocalIP") ?? "0.0.0.0";
+string httpPort = builder.Configuration.GetValue<string>("LocalHttpPort") ?? "5001";
+string httpsPort = builder.Configuration.GetValue<string>("LocalHttpsPort") ?? "44300";
 builder.WebHost.UseUrls($"http://{localIP}:{httpPort}", $"https://{localIP}:{httpsPort}");
 
 // ============================================================================
