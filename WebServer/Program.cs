@@ -18,13 +18,13 @@ builder.Services.AddControllers();
 // ============================================================================
 
 // Retrieve the local IP address to bind to (defaults to 0.0.0.0 to accept all interfaces)
-string localIP = builder.Configuration.GetValue<string>("LocalIPAddress") ?? "0.0.0.0";
+string localIP = builder.Configuration.GetValue<string>("LocalIP") ?? "0.0.0.0";
 
 // Retrieve HTTP port from configuration (defaults to 5000)
-string httpPort = builder.Configuration.GetValue<string>("HttpPort") ?? "5000";
+string httpPort = builder.Configuration.GetValue<string>("LocalHttpPort") ?? "5000";
 
 // Retrieve HTTPS port from configuration (defaults to 44343)
-string httpsPort = builder.Configuration.GetValue<string>("HttpsPort") ?? "44343";
+string httpsPort = builder.Configuration.GetValue<string>("LocalHttpsPort") ?? "44343";
 
 // ============================================================================
 // CERTIFICATE CONFIGURATION
